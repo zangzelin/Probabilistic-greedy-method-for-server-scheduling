@@ -4,8 +4,17 @@ import sys
 
 
 def sortOutput(ins_changelist, task_changelist, text, allscore):
-    # print(rawOutput)
-    outfile = open("./zzl/submit/"+text+str(allscore)+".csv", 'w')
+    # This function create the output file with two change list 
+    # Input :
+    #       ins_changelist, the change list of instrance 
+    #       task_changelist, the change list of task 
+    #       text, the problem name current dealing with 
+    #       allscore, the score of this scheduling calculated in this problem
+    # Output : 
+    #       a file named 'outfile' in /submit/   
+
+
+    outfile = open("./submit/"+text+str(allscore)+".csv", 'w')
 
     for task, machine in ins_changelist[0]:
         assert(machine in Machines)
@@ -32,6 +41,14 @@ def sortOutput(ins_changelist, task_changelist, text, allscore):
 
 
 def StrongRelocateIns(inst, removelist):
+    # This function used to relocate the instrance that can not locate by function RelocateIns 
+    # This function do not consider the constrains of 0.5 cpu
+    # Input: 
+    #       inst, the name of current instrance
+    # Output:
+    #       changelist2, the list of ins->machine change in this relocate 
+    #       changelinstnextloop, the list of ins that  need to be deal with in next scheduling loop
+    #       removelist, the list of ins to be remove at the end of this list.         
 
     changelist2 = []
     changelinstnextloop = []
@@ -55,8 +72,7 @@ def StrongRelocateIns(inst, removelist):
             else:
                 changelist2.append([inst_id, new_machine])
 
-        # information = PutInsToMachineAndCheckIns(inst, machine_id)
-        # assert(information in list(Machines))
+
         Machines[machine_id].hasempty = True
         changelinstnextloop.append([inst, machine_id])
 
@@ -64,6 +80,12 @@ def StrongRelocateIns(inst, removelist):
 
 
 def LoadInsStep1():
+    # This function load the instrance which running in the machines 
+    # And the bad instrance ( over 0.5 cpu ) is record in a list.
+    # Input: 
+    #       no in put 
+    # Output:
+    #       brokenlist, the list of bad instrance, and this ins will be relocate next step.
 
     brokenlist = []
     for inst, app, machine in PreDeploy:
@@ -81,6 +103,14 @@ def LoadInsStep1():
 
 
 def LoadInsStep2(brokenlist, sort_ins_list):
+    # This function reload the bad instrance in step 1 
+    # And find the instrance cant be load in this loop 
+    # Input: 
+    #       brokenlist, the list of bad instrance in step 1
+    #       sort_ins_list, the list of instrance queued by importance.  
+    # Output:
+    #       changelist, 
+    #       changelinstnextloop, the list of bad instrance, and this ins will be relocate next step.    
 
     changelist = []
     removelist = []
@@ -135,13 +165,18 @@ def LoadInsStep2(brokenlist, sort_ins_list):
 
 
 def LoadInsStep3(sort_ins_list):
-
+    # This function reload the bad instrance in step 2 
+    # And find the instrance cant be load in this loop 
+    # Input: 
+    #       sort_ins_list, the list of instrance queued by importance.  
+    # Output:
+    #       changelist, 
+    #       changelinstnextloop, the list of bad instrance, and this ins will be relocate next step.   
     changelist = []
     changelinstnextloop = []
     removelist = []
     num_hundred = 0
     num_strong = 0
-    # sorted_ins_list = zzlsave.LoadSortIns('zzl/inssort/savetxt'+proboem+'.txt')
 
     process = 0
     allnumber = len(NonDeploy)
@@ -186,6 +221,12 @@ def LoadInsStep3(sort_ins_list):
 
 
 def LoadTaskStep1():
+    # This function create and schedule the task 
+    # Input: 
+    #       no 
+    # Output:
+    #       changelist, the list to output
+    
     # pass
     process = 0
     allnumber = len(Joblist)
@@ -220,9 +261,10 @@ def LoadTaskStep1():
 
 
 def solute(text, Globalthreshold):
-    # text = 'a'
+    
+
     sort_ins_list = Loaddata(text)
-    # Globalthreshold = 0.5
+    Globalthreshold = 1
     for machine in Machines:
         Machines[machine].IncreaseThreshold(Globalthreshold)
 
@@ -241,13 +283,13 @@ def solute(text, Globalthreshold):
 
 
 def Createfinalfile():
-    file_a_path = 'zzl/submit/a0.csv'
-    file_b_path = 'zzl/submit/b0.csv'
-    file_c_path = 'zzl/submit/c0.csv'
-    file_d_path = 'zzl/submit/d0.csv'
-    file_e_path = 'zzl/submit/e0.csv'
+    file_a_path = 'submit/a0.csv'
+    file_b_path = 'submit/b0.csv'
+    file_c_path = 'submit/c0.csv'
+    file_d_path = 'submit/d0.csv'
+    file_e_path = 'submit/e0.csv'
 
-    outfile = open("./zzl/submit/final_1.csv", 'w')
+    outfile = open("./submit/final_1.csv", 'w')
 
     file_a = open(file_a_path)
     for line in file_a:
@@ -272,13 +314,6 @@ def Createfinalfile():
     file_e = open(file_e_path)
     for line in file_e:
         outfile.write(line)
-
-
-def check():
-    for machine in Machines:
-        assert(np.min(Machines[machine].rcpu) >= 0)
-        assert(np.min(Machines[machine].rmem) >= 0)
-        assert(np.min(Machines[machine].rdisk) >= 0)
 
 
 if __name__ == '__main__':
