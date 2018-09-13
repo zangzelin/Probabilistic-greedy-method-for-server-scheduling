@@ -1,18 +1,26 @@
-from util import *
-from newloaddata import *
 import sys
 
+from newloaddata import *
+from util import *
+
+
+'''
+This method is a basic firstfit method, and this method can be divided into four part:
+    LoadInsStep1, load the instrance which running in the machines and add the bad instrance into a list( brokenlist )
+    LoadInsStep2, relocate the instrance in brokenlist, and find the instrance can not dealwith in this loop
+    LoadInsStep3, relocate the instrance in brokenlist, and find the instrance can not dealwith in this loop
+    LoadTaskStep1, create the task in job.csv, and random relocate it. 
+'''
 
 def sortOutput(ins_changelist, task_changelist, text, allscore):
-    # This function create the output file with two change list 
+    # This function create the output file with two change list
     # Input :
-    #       ins_changelist, the change list of instrance 
-    #       task_changelist, the change list of task 
-    #       text, the problem name current dealing with 
+    #       ins_changelist, the change list of instrance
+    #       task_changelist, the change list of task
+    #       text, the problem name current dealing with
     #       allscore, the score of this scheduling calculated in this problem
-    # Output : 
-    #       a file named 'outfile' in /submit/   
-
+    # Output :
+    #       a file named 'outfile' in /submit/
 
     outfile = open("./submit/"+text+str(allscore)+".csv", 'w')
 
@@ -41,14 +49,14 @@ def sortOutput(ins_changelist, task_changelist, text, allscore):
 
 
 def StrongRelocateIns(inst, removelist):
-    # This function used to relocate the instrance that can not locate by function RelocateIns 
+    # This function used to relocate the instrance that can not locate by function RelocateIns
     # This function do not consider the constrains of 0.5 cpu
-    # Input: 
+    # Input:
     #       inst, the name of current instrance
     # Output:
-    #       changelist2, the list of ins->machine change in this relocate 
+    #       changelist2, the list of ins->machine change in this relocate
     #       changelinstnextloop, the list of ins that  need to be deal with in next scheduling loop
-    #       removelist, the list of ins to be remove at the end of this list.         
+    #       removelist, the list of ins to be remove at the end of this list.
 
     changelist2 = []
     changelinstnextloop = []
@@ -72,7 +80,6 @@ def StrongRelocateIns(inst, removelist):
             else:
                 changelist2.append([inst_id, new_machine])
 
-
         Machines[machine_id].hasempty = True
         changelinstnextloop.append([inst, machine_id])
 
@@ -80,10 +87,10 @@ def StrongRelocateIns(inst, removelist):
 
 
 def LoadInsStep1():
-    # This function load the instrance which running in the machines 
+    # This function load the instrance which running in the machines
     # And the bad instrance ( over 0.5 cpu ) is record in a list.
-    # Input: 
-    #       no in put 
+    # Input:
+    #       no in put
     # Output:
     #       brokenlist, the list of bad instrance, and this ins will be relocate next step.
 
@@ -103,14 +110,14 @@ def LoadInsStep1():
 
 
 def LoadInsStep2(brokenlist, sort_ins_list):
-    # This function reload the bad instrance in step 1 
-    # And find the instrance cant be load in this loop 
-    # Input: 
+    # This function reload the bad instrance in step 1
+    # And find the instrance cant be load in this loop
+    # Input:
     #       brokenlist, the list of bad instrance in step 1
-    #       sort_ins_list, the list of instrance queued by importance.  
+    #       sort_ins_list, the list of instrance queued by importance.
     # Output:
-    #       changelist, 
-    #       changelinstnextloop, the list of bad instrance, and this ins will be relocate next step.    
+    #       changelist,
+    #       changelinstnextloop, the list of bad instrance, and this ins will be relocate next step.
 
     changelist = []
     removelist = []
@@ -138,6 +145,8 @@ def LoadInsStep2(brokenlist, sort_ins_list):
             removelist.append([inst, machine])
 
             new_machine = ReallocateIns(inst)
+
+            # if can not find a good machine for instrance, then use the strong reloat func to find one
             if new_machine not in list(Machines):
                 new_machine_100 = Reallocate100persentIns(inst)
                 if new_machine_100 not in list(Machines):
@@ -165,13 +174,13 @@ def LoadInsStep2(brokenlist, sort_ins_list):
 
 
 def LoadInsStep3(sort_ins_list):
-    # This function reload the bad instrance in step 2 
-    # And find the instrance cant be load in this loop 
-    # Input: 
-    #       sort_ins_list, the list of instrance queued by importance.  
+    # This function reload the bad instrance in step 2
+    # And find the instrance cant be load in this loop
+    # Input:
+    #       sort_ins_list, the list of instrance queued by importance.
     # Output:
-    #       changelist, 
-    #       changelinstnextloop, the list of bad instrance, and this ins will be relocate next step.   
+    #       changelist,
+    #       changelinstnextloop, the list of bad instrance, and this ins will be relocate next step.
     changelist = []
     changelinstnextloop = []
     removelist = []
@@ -221,12 +230,12 @@ def LoadInsStep3(sort_ins_list):
 
 
 def LoadTaskStep1():
-    # This function create and schedule the task 
-    # Input: 
-    #       no 
+    # This function create and schedule the task
+    # Input:
+    #       no
     # Output:
     #       changelist, the list to output
-    
+
     # pass
     process = 0
     allnumber = len(Joblist)
@@ -261,7 +270,6 @@ def LoadTaskStep1():
 
 
 def solute(text, Globalthreshold):
-    
 
     sort_ins_list = Loaddata(text)
     Globalthreshold = 1
@@ -275,7 +283,6 @@ def solute(text, Globalthreshold):
     task_changelist = LoadTaskStep1()
 
     changelist = [changelist2, changelist3+changelist2next, changelist3next]
-    # changelist = [[], []]
     allscore = CaculateScore()
     sortOutput(changelist, task_changelist, text, allscore)
 
@@ -320,7 +327,8 @@ if __name__ == '__main__':
 
     import sys
     if sys.argv[1] != 'add':
-        print("dealing with problem {} thr {}".format(sys.argv[1],sys.argv[2]))
-        solute(sys.argv[1],float(sys.argv[2])) 
+        print("dealing with problem {} thr {}".format(
+            sys.argv[1], sys.argv[2]))
+        solute(sys.argv[1], float(sys.argv[2]))
     else:
         Createfinalfile()
